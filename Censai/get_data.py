@@ -178,17 +178,21 @@ class DataGenerator(object):
                     self.kappa[i,:,:,0] = self.Kappa_fun(xlens, ylens, elp, phi, Rein, numkappa_side = self.numkappa_side, kap_side_length = 7.68, rc=0, Ds = 1753486987.8422, Dds = 1125770220.58881, c = 299800000)
                         
                 return
-    def read_data_batch_fixedsrc(self,X ,source , kappa, train_or_test, read_or_gen, max_file_num=None, norm_source = False):
+    def read_data_batch_fixedsrc(self,X ,source , kappa, train_or_test, read_or_gen, bias_params = False, max_file_num=None, norm_source = False):
     
         batch_size = X.shape[0]
         #mag = np.zeros((batch_size,1))
 
         if read_or_gen == 'read':
             return
-    
+        
+            
+            
         else:
             if train_or_test == 'test':
                 np.random.seed(seed=136)
+                if bias_params is True:
+                    kappa_incond = np.zeros_like(kappa)
                 x = np.linspace(-1, 1, self.numpix_side) * self.src_side/2
                 y = np.linspace(-1, 1, self.numpix_side) * self.src_side/2
                 Xsrc, Ysrc = np.meshgrid(x, y)
@@ -203,19 +207,30 @@ class DataGenerator(object):
                     Rein = np.random.uniform(low=0.5, high = 2.5)
 
                     #parameters for source
-                    sigma_src = np.random.uniform(low=0.1, high=0.3)#0.1
+                    sigma_src = 0.1#np.random.uniform(low=0.1, high=0.3)
                     #np.random.normal(loc=0.0, scale = 0.01)
-                    x_src = np.random.uniform(low=-0.1, high=0.1)
-                    y_src = np.random.uniform(low=-0.1, high=0.1)
+                    x_src = 0.#np.random.uniform(low=-0.1, high=0.1)
+                    y_src = 0.#np.random.uniform(low=-0.1, high=0.1)
 
                     source[i,:,:,0] = self.gen_source(Xsrc, Ysrc, x_src = x_src, y_src = y_src, sigma_src = sigma_src, numpix_side = self.numpix_side, norm = norm_source)
 
                     kappa[i,:,:,0] = self.Kappa_fun(xlens, ylens, elp, phi, Rein, numkappa_side = self.numkappa_side, kap_side_length = 7.68, rc=0, Ds = 1753486987.8422, Dds = 1125770220.58881, c = 299800000)
                     
+                    if bias_params is True:
+                        #parameters for kappa
+                        biasxlens = np.random.normal(loc=0, scale = 0.1)
+                        biasylens = np.random.normal(loc=0, scale = 0.1)
+                        biaselp = np.minimum(np.random.normal(loc=elp, scale = 0.15), 0.6) #random.uniform(low=0.0, high=0.6)#0.4
+                        biasphi =  np.random.normal(loc=phi, scale = 15.*np.pi/180.)#np.random.uniform(low=0.0, high=2.*np.pi)
+                        biasRein =   np.absolute(np.random.normal(loc=Rein, scale = Rein*0.15))#np.random.uniform(low=0.5, high = 2.5)
+                        kappa_incond[i,:,:,0] = self.Kappa_fun(biasxlens, biasylens, biaselp, biasphi, biasRein, numkappa_side = self.numkappa_side, kap_side_length = 7.68, rc=0, Ds = 1753486987.8422, Dds = 1125770220.58881, c = 299800000)
+                        return source, kappa, kappa_incond
                 return source, kappa
 
             else:
                 np.random.seed(None)
+                if bias_params is True:
+                    self.kappa_incond = np.zeros_like(self.kappa)
                 x = np.linspace(-1, 1, self.numpix_side) * self.src_side/2
                 y = np.linspace(-1, 1, self.numpix_side) * self.src_side/2
                 Xsrc, Ysrc = np.meshgrid(x, y)
@@ -230,15 +245,25 @@ class DataGenerator(object):
                     Rein = np.random.uniform(low=0.5, high = 2.5)
 
                     #parameters for source
-                    sigma_src = np.random.uniform(low=0.1, high=0.3)#0.1
+                    sigma_src = 0.1#np.random.uniform(low=0.1, high=0.3)
                     #np.random.normal(loc=0.0, scale = 0.01)
-                    x_src = np.random.uniform(low=-0.1, high=0.1)
-                    y_src = np.random.uniform(low=-0.1, high=0.1)
+                    x_src = 0.#np.random.uniform(low=-0.1, high=0.1)
+                    y_src = 0.#np.random.uniform(low=-0.1, high=0.1)
 
                     
                     self.source[i,:,:,0] = self.gen_source(Xsrc, Ysrc, x_src = x_src, y_src = y_src, sigma_src = sigma_src, numpix_side = self.numpix_side, norm = norm_source)
 
                     self.kappa[i,:,:,0] = self.Kappa_fun(xlens, ylens, elp, phi, Rein, numkappa_side = self.numkappa_side, kap_side_length = 7.68, rc=0, Ds = 1753486987.8422, Dds = 1125770220.58881, c = 299800000)
+                    
+                    if bias_params is True:
+                        #parameters for kappa
+                        biasxlens = np.random.normal(loc=0, scale = 0.1)
+                        biasylens = np.random.normal(loc=0, scale = 0.1)
+                        biaselp = np.minimum(np.random.normal(loc=elp, scale = 0.15), 0.6) #random.uniform(low=0.0, high=0.6)#0.4
+                        biasphi =  np.random.normal(loc=phi, scale = 15.*np.pi/180.)#np.random.uniform(low=0.0, high=2.*np.pi)
+                        biasRein =   np.absolute(np.random.normal(loc=Rein, scale = Rein*0.15))#np.random.uniform(low=0.5, high = 2.5)
+                        
+                        self.kappa_incond[i,:,:,0] = self.Kappa_fun(biasxlens, biasylens, biaselp, biasphi, biasRein, numkappa_side = self.numkappa_side, kap_side_length = 7.68, rc=0, Ds = 1753486987.8422, Dds = 1125770220.58881, c = 299800000)
                         
                 return                   
                     

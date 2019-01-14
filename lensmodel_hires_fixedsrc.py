@@ -96,7 +96,7 @@ def get_psnr(x_est, x_true):
 def train():
 
     # This is the file that we will save the model to.
-    model_name = os.environ['CENSAI_PATH']+ '/trained_weights/RIM_kappa-source/Censai_lowres_trueFIXEDsrc_Reinkapelp_mvsrc.ckpt'
+    model_name = os.environ['CENSAI_PATH']+ '/trained_weights/RIM_kappa-varstart/Censai_lowres.ckpt'
 
     
     # DEFINE LAURENCE's stuff
@@ -247,7 +247,11 @@ def train():
     ## This runs the inference
     
     #initial conditions
-    x_init_feed1 = tf.maximum(tf.minimum( x_init1 , 1.-1e-4), 1e-4) 
+    
+    
+    kappa_init = tf.placeholder( tf.float32, [None, Datagen.numkappa_side, Datagen.numkappa_side,1] )
+    x_init_feed1 = tf.identity(my_tf_log10(kappa_init))
+    
     x_init_feed2 =   tf.maximum(tf.minimum( x_init2 , 1.-1e-4), 1e-4) 
     
     
@@ -346,16 +350,17 @@ def train():
         
         
 #        restorer.restore(sess,model_name)
-        saver.restore(sess,model_name)
-        min_test_cost = 0.0953
+        #saver.restore(sess,model_name)
+        min_test_cost = 0.953
         # Set logs writer into folder /tmp/tensorflow_logs
 
 	    # Generate test set
         Datagen.Xtest = np.zeros((test_batch_size, Datagen.numpix_side , Datagen.numpix_side,n_channel  ))
         Datagen.sourcetest = np.zeros((test_batch_size, Datagen.numpix_side , Datagen.numpix_side,n_channel  ))
         Datagen.kappatest = np.zeros((test_batch_size, Datagen.numkappa_side , Datagen.numkappa_side,n_channel  )) 
+        Datagen.kappa_incondtest = np.zeros((test_batch_size, Datagen.numkappa_side , Datagen.numkappa_side,n_channel  ))
         
-        Datagen.sourcetest, Datagen.kappatest = Datagen.read_data_batch_fixedsrc(Datagen.Xtest, Datagen.sourcetest, Datagen.kappatest, 'test', 'gen')
+        Datagen.sourcetest, Datagen.kappatest , Datagen.kappa_incondtest = Datagen.read_data_batch_fixedsrc(Datagen.Xtest, Datagen.sourcetest, Datagen.kappatest, 'test', 'gen', bias_params = True)
         imgs = np.zeros((11,test_batch_size, Datagen.numkappa_side , Datagen.numkappa_side, n_channel ))
 
         imgs_1 = np.zeros((11,test_batch_size, Datagen.numkappa_side , Datagen.numkappa_side, n_channel ))
@@ -380,7 +385,8 @@ def train():
             # Loop over all batches
             #Datagen.read_data_batch(Datagen.X ,Datagen.source, Datagen.kappa , train_or_test, read_or_gen)
             for i in range(10000):
-                Datagen.read_data_batch_fixedsrc(Datagen.X ,Datagen.source, Datagen.kappa , train_or_test, read_or_gen)
+                Datagen.read_data_batch_fixedsrc(Datagen.X ,Datagen.source, Datagen.kappa , train_or_test, read_or_gen, bias_params = True)
+                
                 #print 'generated data batch', i
                 #dataprocessor.load_data_batch(100000,'train')
                 
@@ -390,11 +396,11 @@ def train():
                 temp_cost_1 = 0
                 temp_cost_2 = 0
                 if (np.random.uniform() < 1.0):
-                    temp_cost_1,_  = sess.run( [ loss_full_1 , minimize_1 ] ,   {Srctest: Datagen.source, Kappatest: Datagen.kappa,is_training:True})
+                    temp_cost_1,_  = sess.run( [ loss_full_1 , minimize_1 ] ,   {Srctest: Datagen.source, Kappatest: Datagen.kappa, kappa_init: Datagen.kappa_incond, is_training:True})
                     #temp_cost_2,_  = sess.run( [ loss_full_2 , minimize_2 ] ,   {Srctest: Datagen.source, Kappatest: #Datagen.kappa,is_training:True})
                 else:
                     #temp_cost_2,_ , AL1 , AL2= sess.run( [ loss_full_2 , minimize_2 , alltime_output1 , alltime_output2] ,   {Srctest: Datagen.source, Kappatest: Datagen.kappa,is_training:True})
-                    temp_cost_1,_ , AL1 , AL2= sess.run( [ loss_full_1 , minimize_1 , alltime_output1 , alltime_output2] ,   {Srctest: Datagen.source, Kappatest: Datagen.kappa,is_training:True})
+                    temp_cost_1,_ , AL1 , AL2= sess.run( [ loss_full_1 , minimize_1 , alltime_output1 , alltime_output2] ,   {Srctest: Datagen.source, Kappatest: Datagen.kappa,kappa_init: Datagen.kappa_incond,is_training:True})
 
                 temp_cost = temp_cost_1 + temp_cost_2
                 #temp_cost, summary_str,_ = sess.run([loss,merged_summary_op,minimize],   {Srctest: Datagen.source, Kappatest: Datagen.kappa,is_training:True})
@@ -417,7 +423,7 @@ def train():
                     for j in range(10):
                         dpm = 1
                         #temp_cost, temp_psnr= sess.run([loss,psnr], {Srctest: Datagen.sourcetest[dpm*j:dpm*(j+1),:], Kappatest: Datagen.kappatest[dpm*j:dpm*(j+1),:],is_training:False})
-                        temp_cost_1 , temp_cost_2 , imgs_1[1:,dpm*j:dpm*(j+1),:], imgs_2[1:,dpm*j:dpm*(j+1),:] , true_data[dpm*j:dpm*(j+1),:], models[dpm*j:dpm*(j+1),:] = sess.run([ loss_full_1 , loss_full_2 , alltime_output1,alltime_output2, Raytracer.trueimage, model_images  ], {Srctest: Datagen.sourcetest[dpm*j:dpm*(j+1),:], Kappatest: Datagen.kappatest[dpm*j:dpm*(j+1),:],is_training:False})
+                        temp_cost_1 , temp_cost_2 , imgs_1[1:,dpm*j:dpm*(j+1),:], imgs_2[1:,dpm*j:dpm*(j+1),:] , true_data[dpm*j:dpm*(j+1),:], models[dpm*j:dpm*(j+1),:] = sess.run([ loss_full_1 , loss_full_2 , alltime_output1,alltime_output2, Raytracer.trueimage, model_images  ], {Srctest: Datagen.sourcetest[dpm*j:dpm*(j+1),:], Kappatest: Datagen.kappatest[dpm*j:dpm*(j+1),:],kappa_init: Datagen.kappa_incondtest[dpm*j:dpm*(j+1),:],is_training:False})
                         # Compute average loss
                         valid_cost += (temp_cost_1 + temp_cost_2)
                         Ttemp_cost_1 += temp_cost_1
@@ -469,7 +475,7 @@ def train():
 #                            saver = tf.train.Saver(vars_to_save,  max_to_keep=None)
 #                            fisrttime=0
                         
-                        saver.save(sess,os.environ['CENSAI_PATH']+ '/trained_weights/RIM_kappa-source/Censai_lowres_trueFIXEDsrc_Reinkapelp_fullsrc.ckpt')
+                        saver.save(sess, model_name)
                         min_test_cost = Ttemp_cost_1 * 1.
 
         print "Optimization Finished!"
