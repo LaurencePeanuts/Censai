@@ -371,9 +371,10 @@ def train():
         #pred_lens_image_2 = np.zeros((test_batch_size, Datagen.numkappa_side , Datagen.numkappa_side, n_channel ))
         last_grad_1 = np.zeros((test_batch_size, Datagen.numkappa_side , Datagen.numkappa_side, n_channel ))
         last_grad_2 = np.zeros((test_batch_size, Datagen.numkappa_side , Datagen.numkappa_side, n_channel ))
+        
+        print np.where(np.isnan(Datagen.kappa_incondtest))
 
-
-
+        np.save('kappa_incond.npy', Datagen.kappa_incondtest )
         for epoch in range(20):
             train_cost = 0.
             train_psnr = 0.

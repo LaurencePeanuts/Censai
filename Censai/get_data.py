@@ -193,6 +193,8 @@ class DataGenerator(object):
                 np.random.seed(seed=136)
                 if bias_params is True:
                     kappa_incond = np.zeros_like(kappa)
+                else:
+                    kappa_incond = 0.
                 x = np.linspace(-1, 1, self.numpix_side) * self.src_side/2
                 y = np.linspace(-1, 1, self.numpix_side) * self.src_side/2
                 Xsrc, Ysrc = np.meshgrid(x, y)
@@ -224,8 +226,8 @@ class DataGenerator(object):
                         biasphi =  np.random.normal(loc=phi, scale = 15.*np.pi/180.)#np.random.uniform(low=0.0, high=2.*np.pi)
                         biasRein =   np.absolute(np.random.normal(loc=Rein, scale = Rein*0.15))#np.random.uniform(low=0.5, high = 2.5)
                         kappa_incond[i,:,:,0] = self.Kappa_fun(biasxlens, biasylens, biaselp, biasphi, biasRein, numkappa_side = self.numkappa_side, kap_side_length = 7.68, rc=0, Ds = 1753486987.8422, Dds = 1125770220.58881, c = 299800000)
-                        return source, kappa, kappa_incond
-                return source, kappa
+                        
+                return source, kappa, kappa_incond
 
             else:
                 np.random.seed(None)

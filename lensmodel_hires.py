@@ -344,7 +344,7 @@ def train():
         
 #        restorer.restore(sess,model_name)
         saver.restore(sess,model_name)
-        min_test_cost = 0.006869
+        min_test_cost = 0.009
         # Set logs writer into folder /tmp/tensorflow_logs
 
 	    # Generate test set
