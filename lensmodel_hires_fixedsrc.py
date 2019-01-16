@@ -350,7 +350,7 @@ def train():
         
         
 #        restorer.restore(sess,model_name)
-        #saver.restore(sess,model_name)
+        saver.restore(sess,model_name)
         min_test_cost = 0.953
         # Set logs writer into folder /tmp/tensorflow_logs
 
@@ -446,13 +446,13 @@ def train():
                     #np.save('last_grad_2_fangle.npy', last_grad_2)
                     #np.save('pred_lens_image_fangle.npy', pred_lens_image)
                     #np.save('true_data_fangle.npy', true_data)
-                    if (1==0):
-                        np.save('kappa_true_fangle' + str(0) + '.npy', Datagen.kappatest )
-                        np.save('source_true_fangle_train' + str(0) + '.npy', Datagen.sourcetest )
-                        np.save('kappa_rec_train' + str(0) + '.npy', imgs_1)
-                        np.save('source_rec_train' + str(0) + '.npy', imgs_2)
-                        np.save('true_data.npy', true_data )
-                        np.save('models.npy', models )
+                    if (1==1):
+                        np.save('kappa_true_mstr.npy', Datagen.kappatest )
+                        np.save('source_true_mstr.npy', Datagen.sourcetest )
+                        np.save('kappa_rec_mstr.npy', imgs_1)
+                        np.save('source_rec_mstr.npy', imgs_2)
+                        np.save('true_data_mstr.npy', true_data )
+                        np.save('models_mstr.npy', models )
                         #np.save('kappa_rec_fangle_1.npy', imgs_1)
                      	#np.save('kappa_rec_fangle_2.npy', imgs_2)
                      	#np.save('kappa_map_fangle.npy', Datagen.kappatest)
@@ -476,7 +476,7 @@ def train():
 #                            saver = tf.train.Saver(vars_to_save,  max_to_keep=None)
 #                            fisrttime=0
                         
-                        saver.save(sess, model_name)
+                        #saver.save(sess, model_name)
                         min_test_cost = Ttemp_cost_1 * 1.
 
         print "Optimization Finished!"
