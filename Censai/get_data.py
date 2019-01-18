@@ -209,10 +209,10 @@ class DataGenerator(object):
                     Rein = np.random.uniform(low=0.5, high = 2.5)
 
                     #parameters for source
-                    sigma_src = 0.1#np.random.uniform(low=0.1, high=0.3)
+                    sigma_src = np.random.uniform(low=0.1, high=0.3)
                     #np.random.normal(loc=0.0, scale = 0.01)
-                    x_src = 0.#np.random.uniform(low=-0.1, high=0.1)
-                    y_src = 0.#np.random.uniform(low=-0.1, high=0.1)
+                    x_src = np.random.uniform(low=-0.1, high=0.1)
+                    y_src = np.random.uniform(low=-0.1, high=0.1)
 
                     source[i,:,:,0] = self.gen_source(Xsrc, Ysrc, x_src = x_src, y_src = y_src, sigma_src = sigma_src, numpix_side = self.numpix_side, norm = norm_source)
 
@@ -247,10 +247,10 @@ class DataGenerator(object):
                     Rein = np.random.uniform(low=0.5, high = 2.5)
 
                     #parameters for source
-                    sigma_src = 0.1#np.random.uniform(low=0.1, high=0.3)
+                    sigma_src = np.random.uniform(low=0.1, high=0.3)
                     #np.random.normal(loc=0.0, scale = 0.01)
-                    x_src = 0.#np.random.uniform(low=-0.1, high=0.1)
-                    y_src = 0.#np.random.uniform(low=-0.1, high=0.1)
+                    x_src = np.random.uniform(low=-0.1, high=0.1)
+                    y_src = np.random.uniform(low=-0.1, high=0.1)
 
                     
                     self.source[i,:,:,0] = self.gen_source(Xsrc, Ysrc, x_src = x_src, y_src = y_src, sigma_src = sigma_src, numpix_side = self.numpix_side, norm = norm_source)

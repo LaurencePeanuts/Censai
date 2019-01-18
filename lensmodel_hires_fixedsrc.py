@@ -96,7 +96,7 @@ def get_psnr(x_est, x_true):
 def train():
 
     # This is the file that we will save the model to.
-    model_name = os.environ['CENSAI_PATH']+ '/trained_weights/RIM_kappa-varstart/Censai_lowres.ckpt'
+    model_name = os.environ['CENSAI_PATH']+ '/trained_weights/RIM_kappa-varstart/Censai_lowres_woAdam.ckpt'
 
     
     # DEFINE LAURENCE's stuff
@@ -330,28 +330,28 @@ def train():
     # Merge all summaries to a single operator
     merged_summary_op = tf.summary.merge_all()
 
-    saver = tf.train.Saver(max_to_keep=None)
+    #saver = tf.train.Saver(max_to_keep=None)
 
     # Launch the graph
     with tf.Session() as sess:
-#        fisrttime = 1;
+        fisrttime = 1;
         #writer = tf.summary.FileWriter("log/", sess.graph)
         sess.run(init_op)
         # Keep training until reach max iterations
 
         # Restore session
-#        all_vars = tf.global_variables()
-#        Adam_pars = []
-#        for tvar in all_vars:
-#            if "Adam" in tvar.op.name:
-#                Adam_pars = Adam_pars + [tvar]
-#        vars_to_save = set(tf.global_variables()) - set(Adam_pars)
-#        restorer = tf.train.Saver(vars_to_save,  max_to_keep=None)
+        all_vars = tf.global_variables()
+        Adam_pars = []
+        for tvar in all_vars:
+            if "Adam" in tvar.op.name:
+                Adam_pars = Adam_pars + [tvar]
+        vars_to_save = set(tf.global_variables()) - set(Adam_pars)
+        restorer = tf.train.Saver(vars_to_save,  max_to_keep=None)
         
         
-#        restorer.restore(sess,model_name)
-        saver.restore(sess,model_name)
-        min_test_cost = 0.953
+        restorer.restore(sess,model_name)
+        #saver.restore(sess,model_name)
+        min_test_cost = 0.0012
         # Set logs writer into folder /tmp/tensorflow_logs
 
 	    # Generate test set
@@ -446,7 +446,7 @@ def train():
                     #np.save('last_grad_2_fangle.npy', last_grad_2)
                     #np.save('pred_lens_image_fangle.npy', pred_lens_image)
                     #np.save('true_data_fangle.npy', true_data)
-                    if (1==1):
+                    if (1==0):
                         np.save('kappa_true_mstr.npy', Datagen.kappatest )
                         np.save('source_true_mstr.npy', Datagen.sourcetest )
                         np.save('kappa_rec_mstr.npy', imgs_1)
@@ -463,20 +463,20 @@ def train():
                     print 'are we saving?', Ttemp_cost_1, min_test_cost
                     if Ttemp_cost_1 < min_test_cost:
                         print "Saving Checkpoint"
-#                        if (fisrttime==1):
-#                            all_vars = tf.global_variables()
-#                            Adam_pars = []
-#                            for tvar in all_vars:
-#                                if "Adam" in tvar.op.name:
-#                                    Adam_pars = Adam_pars + [tvar]
-#                                    #print(tvar.op.name)
-#                            vars_to_save = set(tf.global_variables()) - set(Adam_pars)
+                        if (fisrttime==1):
+                            all_vars = tf.global_variables()
+                            Adam_pars = []
+                            for tvar in all_vars:
+                                if "Adam" in tvar.op.name:
+                                    Adam_pars = Adam_pars + [tvar]
+                                    #print(tvar.op.name)
+                            vars_to_save = set(tf.global_variables()) - set(Adam_pars)
                             #print(tf.global_variables())
-#
-#                            saver = tf.train.Saver(vars_to_save,  max_to_keep=None)
-#                            fisrttime=0
+
+                            saver = tf.train.Saver(vars_to_save,  max_to_keep=None)
+                            fisrttime=0
                         
-                        #saver.save(sess, model_name)
+                        saver.save(sess, os.environ['CENSAI_PATH']+ '/trained_weights/RIM_kappa-varstart/Censai_lowres_woAdam.ckpt')
                         min_test_cost = Ttemp_cost_1 * 1.
 
         print "Optimization Finished!"
