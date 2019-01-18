@@ -190,7 +190,7 @@ class DataGenerator(object):
             
         else:
             if train_or_test == 'test':
-                np.random.seed(seed=136)
+                np.random.seed(seed=135)
                 if bias_params is True:
                     kappa_incond = np.zeros_like(kappa)
                 else:
@@ -210,7 +210,6 @@ class DataGenerator(object):
 
                     #parameters for source
                     sigma_src = np.random.uniform(low=0.1, high=0.3)
-                    #np.random.normal(loc=0.0, scale = 0.01)
                     x_src = np.random.uniform(low=-0.1, high=0.1)
                     y_src = np.random.uniform(low=-0.1, high=0.1)
 
@@ -248,7 +247,6 @@ class DataGenerator(object):
 
                     #parameters for source
                     sigma_src = np.random.uniform(low=0.1, high=0.3)
-                    #np.random.normal(loc=0.0, scale = 0.01)
                     x_src = np.random.uniform(low=-0.1, high=0.1)
                     y_src = np.random.uniform(low=-0.1, high=0.1)
 
