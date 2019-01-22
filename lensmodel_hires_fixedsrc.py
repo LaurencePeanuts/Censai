@@ -39,9 +39,9 @@ tf.app.flags.DEFINE_boolean('use_prior', True,
                             """Flag whether to input the current estimate again.""")
 tf.app.flags.DEFINE_boolean('accumulate_output', True,
                             """Flag whether some teh network outputs over time.""")
-tf.app.flags.DEFINE_float('lr_kap', 1.0e-6,
+tf.app.flags.DEFINE_float('lr_kap', 5.0e-7,
                             """Global learning rate to use""")
-tf.app.flags.DEFINE_float('lr_src', 3.0e-7,
+tf.app.flags.DEFINE_float('lr_src', 1.0e-5,
                             """Global learning rate to use""")
 tf.app.flags.DEFINE_integer('n_pseudo', 1,
                             """How many pseudo samples should be used""")
@@ -96,7 +96,7 @@ def get_psnr(x_est, x_true):
 def train():
 
     # This is the file that we will save the model to.
-    model_name = os.environ['CENSAI_PATH']+ '/trained_weights/RIM_kappa-varstart/Censai_lowres_woAdam2.ckpt'
+    model_name = os.environ['CENSAI_PATH']+ '/trained_weights/RIM_kappa-varstart/Censai_lowres_woAdam_s+k2.ckpt'
 
     
     # DEFINE LAURENCE's stuff
@@ -228,10 +228,10 @@ def train():
 
     if FLAGS.use_grad:
         output_transform_dict_1.update({'mu': [error_grad1]})
-        output_transform_dict_2.update({'mu': [error_grad2_true_kappa]})
+        output_transform_dict_2.update({'mu': [error_grad2]})
         if FLAGS.n_pseudo > 0:
             output_transform_dict_1.update({'pseudo':[loopfun.ApplySplitFunction(error_grad1, 4 - 1, FLAGS.n_pseudo)]})
-            output_transform_dict_2.update({'pseudo':[loopfun.ApplySplitFunction(error_grad2_true_kappa, 4 - 1, FLAGS.n_pseudo)]})
+            output_transform_dict_2.update({'pseudo':[loopfun.ApplySplitFunction(error_grad2, 4 - 1, FLAGS.n_pseudo)]})
 
     
     input_func1, output_func1, init_func1, output_wrapper1 = decorate_rnn.init(rank=4, output_shape_dict=output_shape_dict,
@@ -398,9 +398,9 @@ def train():
                 temp_cost_2 = 0
                 if (np.random.uniform() < 1.0):
                     #temp_cost_1,_  = sess.run( [ loss_full_1 , minimize_1 ] ,   {Srctest: Datagen.source, Kappatest: Datagen.kappa, kappa_init: Datagen.kappa_incond, is_training:True})
-                    temp_cost_2,_  = sess.run( [ loss_full_2 , minimize_2 ] ,   {Srctest: Datagen.source, Kappatest: #Datagen.kappa,is_training:True})
+                    temp_cost_2,_  = sess.run( [ loss_full_2 , minimize_2 ] ,   {Srctest: Datagen.source, Kappatest: Datagen.kappa, kappa_init: Datagen.kappa_incond, is_training:True})
                 else:
-                    temp_cost_2,_ , AL1 , AL2= sess.run( [ loss_full_2 , minimize_2 , alltime_output1 , alltime_output2] ,   {Srctest: Datagen.source, Kappatest: Datagen.kappa,is_training:True})
+                    temp_cost_2,_ , AL1 , AL2= sess.run( [ loss_full_2 , minimize_2 , alltime_output1 , alltime_output2] ,   {Srctest: Datagen.source, Kappatest: Datagen.kappa, kappa_init: Datagen.kappa_incond,is_training:True})
                     #temp_cost_1,_ , AL1 , AL2= sess.run( [ loss_full_1 , minimize_1 , alltime_output1 , alltime_output2] ,   {Srctest: Datagen.source, Kappatest: Datagen.kappa,kappa_init: Datagen.kappa_incond,is_training:True})
 
                 temp_cost = temp_cost_1 + temp_cost_2
@@ -428,7 +428,7 @@ def train():
                         temp_cost_1 , temp_cost_2 , imgs_1[1:,dpm*j:dpm*(j+1),:], imgs_2[1:,dpm*j:dpm*(j+1),:] , true_data[dpm*j:dpm*(j+1),:], models[dpm*j:dpm*(j+1),:] = sess.run([ loss_full_1 , loss_full_2 , alltime_output1,alltime_output2, Raytracer.trueimage, model_images  ], {Srctest: Datagen.sourcetest[dpm*j:dpm*(j+1),:], Kappatest: Datagen.kappatest[dpm*j:dpm*(j+1),:],kappa_init: Datagen.kappa_incondtest[dpm*j:dpm*(j+1),:],is_training:False})
                         # Compute average loss
                         valid_cost += (temp_cost_1 + temp_cost_2)
-                        Ttemp_cost_1 += temp_cost_1
+                        Ttemp_cost_2 += temp_cost_2
                         #valid_psnr += temp_psnr
                         print 'testcost', i, (temp_cost_1 + temp_cost_2)
 
@@ -477,7 +477,7 @@ def train():
                             saver = tf.train.Saver(vars_to_save,  max_to_keep=None)
                             fisrttime=0
                         
-                        saver.save(sess, os.environ['CENSAI_PATH']+ '/trained_weights/RIM_kappa-varstart/Censai_lowres_woAdam2.ckpt')
+                        saver.save(sess, os.environ['CENSAI_PATH']+ '/trained_weights/RIM_kappa-varstart/Censai_lowres_woAdam_s+k2.ckpt')
                         min_test_cost = Ttemp_cost_2 * 1.
 
         print "Optimization Finished!"
