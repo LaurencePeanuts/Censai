@@ -227,10 +227,10 @@ def train():
         output_transform_dict_2.update({'all':[redundant_identity]})
 
     if FLAGS.use_grad:
-        output_transform_dict_1.update({'mu': [error_grad1]})
+        output_transform_dict_1.update({'mu': [error_grad1_true_src]})
         output_transform_dict_2.update({'mu': [error_grad2]})
         if FLAGS.n_pseudo > 0:
-            output_transform_dict_1.update({'pseudo':[loopfun.ApplySplitFunction(error_grad1, 4 - 1, FLAGS.n_pseudo)]})
+            output_transform_dict_1.update({'pseudo':[loopfun.ApplySplitFunction(error_grad1_true_src, 4 - 1, FLAGS.n_pseudo)]})
             output_transform_dict_2.update({'pseudo':[loopfun.ApplySplitFunction(error_grad2, 4 - 1, FLAGS.n_pseudo)]})
 
     
@@ -477,7 +477,7 @@ def train():
                             saver = tf.train.Saver(vars_to_save,  max_to_keep=None)
                             fisrttime=0
                         
-                        saver.save(sess, os.environ['CENSAI_PATH']+ '/trained_weights/RIM_kappa-varstart/Censai_lowres_woAdam_s+k2.ckpt')
+                        saver.save(sess, os.environ['CENSAI_PATH']+ '/trained_weights/RIM_kappa-varstart/Censai_lowres_woAdam_s+k3.ckpt')
                         min_test_cost = Ttemp_cost_2 * 1.
 
         print "Optimization Finished!"
