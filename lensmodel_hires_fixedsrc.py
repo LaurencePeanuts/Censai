@@ -96,7 +96,7 @@ def get_psnr(x_est, x_true):
 def train():
 
     # This is the file that we will save the model to.
-    model_name = os.environ['CENSAI_PATH']+ '/trained_weights/RIM_kappa-varstart/Censai_lowres_woAdam_s+k2.ckpt'
+    model_name = os.environ['CENSAI_PATH']+ '/trained_weights/RIM_kappa-varstart/Censai_lowres_woAdam_s+k3.ckpt'
 
     
     # DEFINE LAURENCE's stuff
@@ -397,7 +397,7 @@ def train():
                 temp_cost_1 = 0
                 temp_cost_2 = 0
                 if (np.random.uniform() < 1.0):
-                    #temp_cost_1,_  = sess.run( [ loss_full_1 , minimize_1 ] ,   {Srctest: Datagen.source, Kappatest: Datagen.kappa, kappa_init: Datagen.kappa_incond, is_training:True})
+                    temp_cost_1,_  = sess.run( [ loss_full_1 , minimize_1 ] ,   {Srctest: Datagen.source, Kappatest: Datagen.kappa, kappa_init: Datagen.kappa_incond, is_training:True})
                     temp_cost_2,_  = sess.run( [ loss_full_2 , minimize_2 ] ,   {Srctest: Datagen.source, Kappatest: Datagen.kappa, kappa_init: Datagen.kappa_incond, is_training:True})
                 else:
                     temp_cost_2,_ , AL1 , AL2= sess.run( [ loss_full_2 , minimize_2 , alltime_output1 , alltime_output2] ,   {Srctest: Datagen.source, Kappatest: Datagen.kappa, kappa_init: Datagen.kappa_incond,is_training:True})
@@ -434,9 +434,9 @@ def train():
 
                     valid_cost /= 10.
                     Ttemp_cost_2 /= 10.
-                     #valid_psnr /= 10.
+                    #valid_psnr /= 10.
 # #
-# #                    # Display logs per epoch step
+# #                 # Display logs per epoch step
                     print "Epoch:", '%04d' % (epoch+1), "batch:", '%04d' % (i+1)
                     print "cost=", "{:.9f}".format(train_cost/(i+1))
                     #print "psnr=", "{:.9f}".format(train_psnr/(i+1))
@@ -448,12 +448,12 @@ def train():
                     #np.save('pred_lens_image_fangle.npy', pred_lens_image)
                     #np.save('true_data_fangle.npy', true_data)
                     if (1==0):
-                        np.save('kappa_true_mstr.npy', Datagen.kappatest )
-                        np.save('source_true_mstr.npy', Datagen.sourcetest )
-                        np.save('kappa_rec_mstr.npy', imgs_1)
-                        np.save('source_rec_mstr.npy', imgs_2)
-                        np.save('true_data_mstr.npy', true_data )
-                        np.save('models_mstr.npy', models )
+                        np.save('kappa_true_mstr_test.npy', Datagen.kappatest )
+                        np.save('source_true_mstr_test.npy', Datagen.sourcetest )
+                        np.save('kappa_rec_mstr_test.npy', imgs_1)
+                        np.save('source_rec_mstr_test.npy', imgs_2)
+                        np.save('true_data_mstr_test.npy', true_data )
+                        np.save('models_mstr_test.npy', models )
                         #np.save('kappa_rec_fangle_1.npy', imgs_1)
                      	#np.save('kappa_rec_fangle_2.npy', imgs_2)
                      	#np.save('kappa_map_fangle.npy', Datagen.kappatest)
@@ -477,7 +477,7 @@ def train():
                             saver = tf.train.Saver(vars_to_save,  max_to_keep=None)
                             fisrttime=0
                         
-                        saver.save(sess, os.environ['CENSAI_PATH']+ '/trained_weights/RIM_kappa-varstart/Censai_lowres_woAdam_s+k3.ckpt')
+                        saver.save(sess, os.environ['CENSAI_PATH']+ '/trained_weights/RIM_kappa-varstart/Censai_lowres_woAdam_s+k4.ckpt')
                         min_test_cost = Ttemp_cost_2 * 1.
 
         print "Optimization Finished!"
