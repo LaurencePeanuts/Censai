@@ -102,7 +102,7 @@ def train():
     numkappa_side = 192
     
     batch_size = 5
-    n_channel = 1
+    n_channel = 2
     
     Raytracer = Celi.Likelihood(numpix_side = numpix_side, src_side = 3.0)
     Datagen = Celi.DataGenerator(numpix_side=Raytracer.numpix_side, numkappa_side=numkappa_side, src_side=Raytracer.src_side, im_side = Raytracer.im_side,max_noise_rms=0.05,use_psf=False,lens_model_error=[0.01,0.01,0.01,0.01,0.01,0.01,0.01],binpix=1,mask=False,min_unmasked_flux=1.0)
