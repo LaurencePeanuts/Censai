@@ -100,9 +100,13 @@ def train():
 
     
     # DEFINE LAURENCE's stuff
-    numpix_side = 48
-    numpix_src  = 48
-    numkappa_side = 48
+    numpix_side = 192
+    numpix_src  = 192
+    numkappa_side = 192
+    
+    RIM_numpix_side = 48
+    RIM_numpix_src = 48
+    RIM_numkappa_side = 48
     
     batch_size = 20
     test_batch_size = 100
@@ -131,9 +135,11 @@ def train():
     y_image2 = tf.identity(Srctest)
     #y_1 = tf.reshape(y_image1, [-1,Datagen.numkappa_side**2])
     #y_2 = tf.reshape(y_image2, [-1,Datagen.numpix_side**2])
-    x_init1 = tf.zeros_like(y_image1)
-    x_init2 = tf.zeros_like(y_image2)
-
+    
+    x_init1 = tf.fill([tf.shape(y_image1)[0], RIM_numkappa_side, RIM_numkappa_side,1], 0.)#tf.zeros_like(y_image1)
+    x_init2 =  tf.fill([tf.shape(y_image1)[0], RIM_numpix_side, RIM_numpix_side,1], 0.)#tf.zeros_like(y_image2)
+    print x_init2
+    print x_init1
     Raytracer.trueimage = Raytracer.get_lensed_image(Kappatest,[0.,0.], 7.68, Srctest)
     x_image = Raytracer.trueimage
     
@@ -168,17 +174,35 @@ def train():
 #        x_temp = ones_like(x_param) #tf.nn.sigmoid(x_param) * (1. - tf.nn.sigmoid(x_param))
 #        return x_temp
 #    
+    def decoder_kappa(code):
+        x = tf.layers.conv2d_transpose(code, filters=128, kernel_size=4, strides=2, padding='same', activation=tf.nn.relu, trainable=False)
+        x2 = tf.layers.conv2d_transpose(x, filters=64, kernel_size=4, strides=2, padding='same', activation=tf.nn.relu, trainable=False)
+        x3 = tf.layers.conv2d_transpose(x2, filters=1, kernel_size=4, strides=1, padding='same', activation=tf.nn.sigmoid, trainable=False)
+        return x3
+    
+    def decoder_src(code):
+        x = tf.layers.conv2d_transpose(code, filters=128, kernel_size=4, strides=2, padding='same', activation=tf.nn.relu, trainable=False)
+        x2 = tf.layers.conv2d_transpose(x, filters=64, kernel_size=4, strides=2, padding='same', activation=tf.nn.relu, trainable=False)
+        x3 = tf.layers.conv2d_transpose(x2, filters=1, kernel_size=4, strides=1, padding='same', activation=tf.nn.sigmoid, trainable=False)
+        return x3 
+    
     def error_grad1(x_test , the_other):
-        return tf.gradients(Raytracer.Loglikelihood( param2image_src(the_other) , param2image(x_test), [0.,0.], 7.68), x_test)[0]
+        decod_kap = decoder_kappa(x_test)
+        decod_src = decoder_src(the_other)
+        return tf.gradients(Raytracer.Loglikelihood( param2image_src(decod_src) , param2image(decod_kap), [0.,0.], 7.68), x_test)[0]
 
     def error_grad1_true_src(x_test , the_other):
-        return tf.gradients(Raytracer.Loglikelihood( Srctest, param2image(x_test), [0.,0.], 7.68), x_test)[0]
+        decod_kap = decoder_kappa(x_test)
+        return tf.gradients(Raytracer.Loglikelihood( Srctest, param2image(decod_kap), [0.,0.], 7.68), x_test)[0]
 
     def error_grad2(x_test , the_other):
-        return tf.gradients(Raytracer.Loglikelihood( param2image_src(x_test) , param2image(the_other), [0.,0.], 7.68), x_test)[0]
+        decod_kap = decoder_kappa(the_other)
+        decod_src = decoder_src(x_test)
+        return tf.gradients(Raytracer.Loglikelihood( param2image_src(decod_src) , param2image(decod_kap), [0.,0.], 7.68), x_test)[0]
 
     def error_grad2_true_kappa(x_test , the_other):
-        return tf.gradients(Raytracer.Loglikelihood( param2image_src(x_test) , Kappatest , [0.,0.], 7.68), x_test)[0]
+        decod_src = decoder_src(x_test)
+        return tf.gradients(Raytracer.Loglikelihood( param2image_src(decod_src) , Kappatest , [0.,0.], 7.68), x_test)[0]
 
     def redundant_identity(x_test , the_other):
         return tf.identity(x_test)
@@ -187,29 +211,67 @@ def train():
         temp_data1 = y_image1
 	#tens = tf.constant(10.0)
 	#temp_data1 = tf.pow(tens, temp_data1)
+
+ 
         if expand_dim:
             print('DIMS ARE ... ')
-            print(temp_data1.shape)
             temp_data1 = tf.expand_dims(temp_data1,0)
             print(temp_data1.shape)
-        lab_core = tf.slice(temp_data1, [0,0,numkappa_side/2-3, numkappa_side/2-3,0], [-1,-1, numkappa_side/2+3, numkappa_side/2+3,-1])
-        pred_core = tf.slice(x_est1, [0,0,numkappa_side/2-3, numkappa_side/2-3,0], [-1,-1, numkappa_side/2+3, numkappa_side/2+3,-1])
-        return tf.reduce_mean(0.5 * tf.square(x_est1 - temp_data1) , [-3,-2,-1] ) + 10.*tf.reduce_mean(0.5 * tf.square(pred_core - lab_core) , [-3,-2,-1] )
+
+        ##Try to make the cost higher for central kappa pixels..
+        #lab_core = tf.slice(temp_data1, [0,0,numkappa_side/2-3, numkappa_side/2-3,0], [-1,-1, numkappa_side/2+3, numkappa_side/2+3,-1])
+#        pred_core = tf.slice(x_est1, [0,0,numkappa_side/2-3, numkappa_side/2-3,0], [-1,-1, numkappa_side/2+3, numkappa_side/2+3,-1])
+        
+#        inputs_series = tf.unstack(x_est1, axis=0)
+#        for current_input in inputs_series:
+#            #current_input = tf.reshape(current_input, [batch_size, 48,48,1])
+#            output = decoder_kappa(current_input)
+#            output_series.append(output)
+#            alltime_kap = tf.stack(output_series, axis=0)
+#        
+        max_batch_size = 10
+        
+        partitions = tf.range(max_batch_size)
+        num_partitions = max_batch_size
+        partitioned = tf.dynamic_partition(x_est1, partitions, num_partitions, name='dynamic_unstack')
+        output_series = []
+        for current_input in partitioned:
+            current_input = tf.reshape(current_input, [-1, 48,48,1])
+            output = decoder_kappa(current_input)
+            output_series.append(output)
+            alltime_kap = tf.stack(output_series, axis=0)
+        
+        return tf.reduce_mean(0.5 * tf.square(alltime_kap - temp_data1) , [-3,-2,-1] ) #+ 10.*tf.reduce_mean(0.5 * tf.square(pred_core - lab_core) , [-3,-2,-1] )
 
     def lossfun_2(x_est2,expand_dim=False):
         temp_data2 = y_image2
         if expand_dim:
             temp_data2 = tf.expand_dims(temp_data2,0)
-        return tf.reduce_mean(0.5 * tf.square(x_est2 - temp_data2) , [-3,-2,-1] ) 
+        
+        max_batch_size = 10
+        partitions = tf.range(max_batch_size)
+        num_partitions = max_batch_size
+        partitioned = tf.dynamic_partition(x_est2, partitions, num_partitions, name='dynamic_unstack')
+        output_series = []
+        for current_input in partitioned:
+            current_input = tf.reshape(current_input, [-1, 48,48,1])
+            output = decoder_src(current_input)
+            print output
+            output_series.append(output)
+            alltime_src = tf.stack(output_series, axis=0)
+            print alltime_src
+          
+        
+        return tf.reduce_mean(0.5 * tf.square(alltime_src - temp_data2) , [-3,-2,-1] ) 
 
-    def lossfun(x_est1,x_est2,expand_dim=False):
-        temp_data1 = y_image1
-        temp_data2 = y_image2
-        if expand_dim:
-            temp_data1 = tf.expand_dims(temp_data1,0)
-            temp_data2 = tf.expand_dims(temp_data2,0)
-        return tf.reduce_mean(0.5 * tf.square(x_est1 - temp_data1) , [-3,-2,-1] ) + tf.reduce_sum(0.5 * tf.square(x_est2 - temp_data2) , [-3,-2,-1] )
-    ## End helper functions
+#    def lossfun(x_est1,x_est2,expand_dim=False):
+#        temp_data1 = y_image1
+#        temp_data2 = y_image2
+#        if expand_dim:
+#            temp_data1 = tf.expand_dims(temp_data1,0)
+#            temp_data2 = tf.expand_dims(temp_data2,0)
+#        return tf.reduce_mean(0.5 * tf.square(x_est1 - temp_data1) , [-3,-2,-1] ) + tf.reduce_sum(0.5 * tf.square(x_est2 - temp_data2) , [-3,-2,-1] )
+#    ## End helper functions
 
 
     ## Setup RNN
@@ -288,7 +350,8 @@ def train():
     ## Define loss functions
     loss_full_1 = tf.reduce_sum(tf.reduce_mean(p_t * lossfun_1(alltime_output1, True), reduction_indices=[1]))
     loss_full_2 = tf.reduce_sum(tf.reduce_mean(p_t * lossfun_2(alltime_output2, True), reduction_indices=[1]))
-    loss_full = tf.reduce_sum(tf.reduce_mean(p_t * lossfun(alltime_output1,alltime_output2, True), reduction_indices=[1]))
+    #loss_full = tf.reduce_sum(tf.reduce_mean(p_t * lossfun(alltime_output1,alltime_output2, True), reduction_indices=[1]))
+    
     #loss_1 = tf.reduce_mean(lossfun_1(final_output1))
     #loss_2 = tf.reduce_mean(lossfun_2(final_output2))
     #loss = tf.reduce_mean(lossfun(final_output1,final_output2))
@@ -345,7 +408,7 @@ def train():
         
         
 #        restorer.restore(sess,model_name)
-        saver.restore(sess,model_name)
+        #saver.restore(sess,model_name)
         min_test_cost = 0.1
         # Set logs writer into folder /tmp/tensorflow_logs
 
@@ -443,7 +506,7 @@ def train():
                     #np.save('last_grad_2_fangle.npy', last_grad_2)
                     #np.save('pred_lens_image_fangle.npy', pred_lens_image)
                     #np.save('true_data_fangle.npy', true_data)
-                    if (1==1):
+                    if (1==0):
                         np.save('kappa_true_s+k' + str(1) + '.npy', Datagen.kappatest )
                         np.save('source_true_s+k' + str(1) + '.npy', Datagen.sourcetest )
                         np.save('kappa_rec_test_s+k' + str(1) + '.npy', imgs_1)
@@ -470,7 +533,7 @@ def train():
 #                            saver = tf.train.Saver(vars_to_save,  max_to_keep=None)
 #                            fisrttime=0
                         
-                        saver.save(sess,os.environ['CENSAI_PATH']+ '/trained_weights/RIM_kappa-source/Censai_lowres_2_fullsrc_Reinkap_8.ckpt')
+                        #saver.save(sess,os.environ['CENSAI_PATH']+ '/trained_weights/RIM_kappa-source/Censai_lowres_2_fullsrc_Reinkap_8.ckpt')
                         min_test_cost = Ttemp_cost_1 * 1.
 
         print "Optimization Finished!"
