@@ -57,7 +57,7 @@ tf.app.flags.DEFINE_integer('depth', 1,
                             """Depth of the network""")
 tf.app.flags.DEFINE_integer('batch_size', 5,
                             """Number of samples per batch.""")
-tf.app.flags.DEFINE_integer('t_max', 10,
+tf.app.flags.DEFINE_integer('t_max', 2,
                             """The number of time steps to train on. """
                             """If -1 it will be drawn randomly from a geometrix distribution.""")
 tf.app.flags.DEFINE_integer('j_min', 6,
@@ -108,8 +108,8 @@ def train():
     RIM_numpix_src = 48
     RIM_numkappa_side = 48
     
-    batch_size = 20
-    test_batch_size = 100
+    batch_size = 1
+    test_batch_size = 10
     n_channel = 1
     
     Raytracer = Celi.Likelihood(numpix_side = numpix_side)
@@ -229,7 +229,7 @@ def train():
 #            output_series.append(output)
 #            alltime_kap = tf.stack(output_series, axis=0)
 #        
-        max_batch_size = 10
+        max_batch_size = 5
         
         partitions = tf.range(max_batch_size)
         num_partitions = max_batch_size
@@ -248,7 +248,7 @@ def train():
         if expand_dim:
             temp_data2 = tf.expand_dims(temp_data2,0)
         
-        max_batch_size = 10
+        max_batch_size = 5
         partitions = tf.range(max_batch_size)
         num_partitions = max_batch_size
         partitioned = tf.dynamic_partition(x_est2, partitions, num_partitions, name='dynamic_unstack')
@@ -256,10 +256,8 @@ def train():
         for current_input in partitioned:
             current_input = tf.reshape(current_input, [-1, 48,48,1])
             output = decoder_src(current_input)
-            print output
             output_series.append(output)
             alltime_src = tf.stack(output_series, axis=0)
-            print alltime_src
           
         
         return tf.reduce_mean(0.5 * tf.square(alltime_src - temp_data2) , [-3,-2,-1] ) 
@@ -479,7 +477,7 @@ def train():
                     #valid_psnr = 0.
 # #
                     for j in range(10):
-                        dpm = 10
+                        dpm = 1
                         temp_cost_1 = 0.
                         temp_cost_2 = 0.
                         #temp_cost, temp_psnr= sess.run([loss,psnr], {Srctest: Datagen.sourcetest[dpm*j:dpm*(j+1),:], Kappatest: Datagen.kappatest[dpm*j:dpm*(j+1),:],is_training:False})
