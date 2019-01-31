@@ -100,9 +100,9 @@ def train():
 
     
     # DEFINE LAURENCE's stuff
-    numpix_side = 192
-    numpix_src  = 192
-    numkappa_side = 192
+    numpix_side = 48
+    numpix_src  = 48
+    numkappa_side = 48
     
     RIM_numpix_side = 48
     RIM_numpix_src = 48
@@ -175,15 +175,17 @@ def train():
 #        return x_temp
 #    
     def decoder_kappa(code):
-        x = tf.layers.conv2d_transpose(code, filters=128, kernel_size=4, strides=2, padding='same', activation=tf.nn.relu, trainable=False)
-        x2 = tf.layers.conv2d_transpose(x, filters=64, kernel_size=4, strides=2, padding='same', activation=tf.nn.relu, trainable=False)
-        x3 = tf.layers.conv2d_transpose(x2, filters=1, kernel_size=4, strides=1, padding='same', activation=tf.nn.sigmoid, trainable=False)
+#        x = tf.layers.conv2d_transpose(code, filters=128, kernel_size=4, strides=2, padding='same', activation=tf.nn.relu, trainable=False)
+#        x2 = tf.layers.conv2d_transpose(x, filters=64, kernel_size=4, strides=2, padding='same', activation=tf.nn.relu, trainable=False)
+#        x3 = tf.layers.conv2d_transpose(x2, filters=1, kernel_size=4, strides=1, padding='same', activation=tf.nn.sigmoid, trainable=False)
+        x3 = code
         return x3
     
     def decoder_src(code):
-        x = tf.layers.conv2d_transpose(code, filters=128, kernel_size=4, strides=2, padding='same', activation=tf.nn.relu, trainable=False)
-        x2 = tf.layers.conv2d_transpose(x, filters=64, kernel_size=4, strides=2, padding='same', activation=tf.nn.relu, trainable=False)
-        x3 = tf.layers.conv2d_transpose(x2, filters=1, kernel_size=4, strides=1, padding='same', activation=tf.nn.sigmoid, trainable=False)
+#        x = tf.layers.conv2d_transpose(code, filters=128, kernel_size=4, strides=2, padding='same', activation=tf.nn.relu, trainable=False)
+#        x2 = tf.layers.conv2d_transpose(x, filters=64, kernel_size=4, strides=2, padding='same', activation=tf.nn.relu, trainable=False)
+#        x3 = tf.layers.conv2d_transpose(x2, filters=1, kernel_size=4, strides=1, padding='same', activation=tf.nn.sigmoid, trainable=False)
+        x3 = code
         return x3 
     
     def error_grad1(x_test , the_other):
@@ -229,7 +231,7 @@ def train():
 #            output_series.append(output)
 #            alltime_kap = tf.stack(output_series, axis=0)
 #        
-        max_batch_size = 5
+        max_batch_size = 2
         
         partitions = tf.range(max_batch_size)
         num_partitions = max_batch_size
@@ -248,7 +250,7 @@ def train():
         if expand_dim:
             temp_data2 = tf.expand_dims(temp_data2,0)
         
-        max_batch_size = 5
+        max_batch_size = 2
         partitions = tf.range(max_batch_size)
         num_partitions = max_batch_size
         partitioned = tf.dynamic_partition(x_est2, partitions, num_partitions, name='dynamic_unstack')

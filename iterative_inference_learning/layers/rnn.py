@@ -71,6 +71,10 @@ def flex_rnn(cell1, cell2, loop_fn1, loop_fn2, init_fn1=None, init_fn2=None, dty
     flat_output_dtypes1 = [emit.dtype for emit in flat_output_structure1]
     flat_output_structure2 = nest.flatten(current_output2)
     flat_output_dtypes2 = [emit.dtype for emit in flat_output_structure2]
+#    print flat_output_structure1)
+#    print flat_output_structure1[0]
+#    print flat_output_dtypes1
+    
 
     # Initialise List TensorArrays for output
     # First initialise them flat
@@ -78,10 +82,11 @@ def flex_rnn(cell1, cell2, loop_fn1, loop_fn2, init_fn1=None, init_fn2=None, dty
         tensor_array_ops.TensorArray(
             dtype=dtype_i, dynamic_size=True, size=0, clear_after_read=False, name="rnn_output_%d" % i)
         for i, dtype_i in enumerate(flat_output_dtypes1)]
+#    print tf.size(flat_output_ta1)
     # Then turn it into a hierarchical form
     output_ta1 = nest.pack_sequence_as(structure=current_output1,
                                     flat_sequence=flat_output_ta1)
-
+#    print output_ta1
     flat_output_ta2 = [
         tensor_array_ops.TensorArray(
             dtype=dtype_i, dynamic_size=True, size=0, clear_after_read=False, name="rnn_output_%d" % i)
@@ -91,7 +96,7 @@ def flex_rnn(cell1, cell2, loop_fn1, loop_fn2, init_fn1=None, init_fn2=None, dty
                                     flat_sequence=flat_output_ta2)
 
     # This function track the stopping criterion
-    # One all elements (i.e. batch iterations) are finished, the while loop will stop
+    # Once all elements (i.e. batch iterations) are finished, the while loop will stop
     def condition(_unused_time, elements_finished1, *_):
       return math_ops.logical_not(math_ops.reduce_all(elements_finished1))
 
