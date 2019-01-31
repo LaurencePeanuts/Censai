@@ -191,20 +191,20 @@ def train():
     def error_grad1(x_test , the_other):
         decod_kap = decoder_kappa(x_test)
         decod_src = decoder_src(the_other)
-        return tf.gradients(Raytracer.Loglikelihood( param2image_src(decod_src) , param2image(decod_kap), [0.,0.], 7.68), x_test)[0]
+        return tf.gradients(Raytracer.Loglikelihood( Raytracer.get_lensed_image(param2image(decod_kap), [0.,0.], 7.68, param2image_src(decod_src), noisy=False)) , x_test)[0]
 
     def error_grad1_true_src(x_test , the_other):
         decod_kap = decoder_kappa(x_test)
-        return tf.gradients(Raytracer.Loglikelihood( Srctest, param2image(decod_kap), [0.,0.], 7.68), x_test)[0]
+        return tf.gradients(Raytracer.Loglikelihood( Raytracer.get_lensed_image(param2image(decod_kap), [0.,0.], 7.68, Srctest, noisy=False)), x_test)[0]
 
     def error_grad2(x_test , the_other):
         decod_kap = decoder_kappa(the_other)
         decod_src = decoder_src(x_test)
-        return tf.gradients(Raytracer.Loglikelihood( param2image_src(decod_src) , param2image(decod_kap), [0.,0.], 7.68), x_test)[0]
+        return tf.gradients(Raytracer.Loglikelihood( Raytracer.get_lensed_image(param2image(decod_kap), [0.,0.], 7.68, param2image_src(decod_src), noisy=False)) ,  x_test)[0]
 
     def error_grad2_true_kappa(x_test , the_other):
         decod_src = decoder_src(x_test)
-        return tf.gradients(Raytracer.Loglikelihood( param2image_src(decod_src) , Kappatest , [0.,0.], 7.68), x_test)[0]
+        return tf.gradients(Raytracer.Loglikelihood( Raytracer.get_lensed_image(Kappatest, [0.,0.], 7.68, param2image_src(decod_src), noisy=False)) , x_test)[0]
 
     def redundant_identity(x_test , the_other):
         return tf.identity(x_test)

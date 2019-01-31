@@ -166,30 +166,35 @@ class Likelihood(object):
         
         return i, j
         
-    def Loglikelihood(self, src, Kappa, kap_cent, kap_side, noisy=True, max_noise_rms=0.05):
+    def Loglikelihood(self, img_pred, noisy=True, max_noise_rms=0.05, trueimage=None, noise_rms=None):
         '''
         Computes the likelihood of observing an image (img), given a model image for the src
         (src).  Computes the raytracing over multiple images in a vectorized way.  
         '''
 
-        img_pred = self.get_lensed_image(Kappa, kap_cent, kap_side, src,noisy=False, max_noise_rms=max_noise_rms)
+        #img_pred = self.get_lensed_image(Kappa, kap_cent, kap_side, src,noisy=False, max_noise_rms=max_noise_rms)
         #tf.add_to_collection('mykappa', kap_cent)
         #xsrc , ysrc = self.raytrace2()
 
         #xsrc = tf.reshape(xsrc,[-1])
         #ysrc = tf.reshape(ysrc,[-1])
-
+        if trueimage is None:
+            trueimage = self.trueimage
         #img_pred = self._interpolate(self.src,xsrc,ysrc,[self.numpix_side,self.numpix_side],self.src_res)
-        img_pred = tf.reshape(img_pred,tf.shape(self.trueimage))
-
+        
+        img_pred = tf.reshape(img_pred,tf.shape(trueimage))
+        
 #        if self.psf:
 #            img_pred = tf.nn.conv2d(img_pred,self.psf_pl,strides=[1,1,1,1],padding='SAME')
 #
 #        if hasattr(self,'mask_pl'):
 #            img_pred = tf.multiply(img_pred,self.mask_pl)
-        mse = tf.reduce_sum(tf.square(tf.subtract(img_pred,self.trueimage)))
+        mse = tf.reduce_sum(tf.square(tf.subtract(img_pred, trueimage)))
 
-        if hasattr(self,'noise_rms'):
-            mse /= tf.square(self.noise_rms)
+        
+        if noise_rms is None and hasattr(self,'noise_rms'):
+            mse /= tf.square(self.noise_rms)    
+        else:
+            mse /= tf.square(noise_rms)
 
         return mse     
